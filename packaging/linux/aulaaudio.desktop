@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=AulaAudio
+Comment=Música, timbres y avisos del centro educativo
+Exec=@APPDIR@/AulaAudio/AulaAudio
+Icon=@APPDIR@/aulaaudio.png
+Terminal=false
+Categories=AudioVideo;Audio;Education;

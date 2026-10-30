@@ -1,0 +1,19 @@
+{
+  "volumen_general": 80,
+  "dispositivo_id": "",
+  "dispositivo_nombre": "",
+  "si_falta_dispositivo": "predeterminado",
+  "automatizacion_activa": true,
+  "zona_horaria": "Europe/Madrid",
+  "margen_retraso_segundos": 60,
+  "fundido_salida_segundos": 3,
+  "prioridad_manual": 5,
+  "minimizar_a_bandeja": true,
+  "iniciar_minimizado": false,
+  "impedir_suspension": true,
+  "dias_historial": 180,
+  "copia_automatica": true,
+  "copias_automaticas_a_conservar": 14,
+  "primera_ejecucion_completada": false,
+  "aviso_bandeja_mostrado": false
+}

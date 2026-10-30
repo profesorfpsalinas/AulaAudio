@@ -1,0 +1,17 @@
+.venv/
+.venv-linux/
+__pycache__/
+*.pyc
+build/
+build-linux/
+dist/
+dist-linux/
+.pytest_cache/
+
+*.db
+*.log
+.env
+
+*.db
+*.log
+.env
