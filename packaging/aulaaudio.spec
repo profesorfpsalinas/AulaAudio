@@ -23,7 +23,8 @@ a = Analysis(
     [str(ROOT / "AulaAudio.pyw")],
     pathex=[str(ROOT)],
     binaries=[],
-    datas=[(str(ROOT / "config.example.json"), "."), (str(ROOT / "LICENCIAS_TERCEROS.md"), ".")],
+    datas=[(str(ROOT / "config.example.json"), "."), (str(ROOT / "LICENCIAS_TERCEROS.md"), "."),
+           (str(ROOT / "aulaaudio" / "musica"), "aulaaudio/musica")],  # música libre para recreos (CC0)
     hiddenimports=["tzdata", "PySide6.QtMultimedia"],
     excludes=EXCLUDES,
     noarchive=False,

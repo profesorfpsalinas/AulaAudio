@@ -21,6 +21,15 @@ entrega completo junto con el programa.
 Los sonidos de ejemplo y el sonido de prueba los genera el propio programa por síntesis; no
 proceden de ninguna obra protegida.
 
+## Música libre para recreos (incluida desde la versión 1.2)
+
+Las 8 piezas de `aulaaudio/musica` son **obras originales** creadas para AulaAudio por
+composición algorítmica y síntesis (`tools/componer_musica.py`). No contienen muestras,
+grabaciones ni melodías de otras obras. Se dedican al **dominio público con CC0 1.0 Universal**
+(https://creativecommons.org/publicdomain/zero/1.0/deed.es): se pueden reproducir en público,
+copiar, modificar y distribuir sin permiso ni pago, y no están gestionadas por ninguna entidad de
+gestión. El código del compositor sigue bajo la licencia GPL v3 del programa.
+
 ## Derechos de reproducción pública de la música
 
 AulaAudio **no** incluye música ni concede ningún derecho sobre ella. Reproducir música en un
@@ -30,6 +39,7 @@ El centro es responsable de:
 - Disponer de las licencias necesarias para la música que utilice (en España, las gestionan
   entidades como SGAE y AGEDI/AIE; consulte si su administración educativa tiene un convenio), o
 - Utilizar música libre de derechos o con licencias que permitan la comunicación pública
-  (por ejemplo, determinadas obras con licencia Creative Commons o de dominio público).
+  (por ejemplo, determinadas obras con licencia Creative Commons o de dominio público), como la
+  **música libre para recreos incluida** con AulaAudio.
 
 Conserve la documentación de las licencias de la música junto con la del equipo.

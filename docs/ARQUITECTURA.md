@@ -34,6 +34,8 @@ aulaaudio/
   db.py           SQLite: esquema versionado, migraciones, CRUD con consultas parametrizadas
   scheduler.py    Qué suena cada día (excepciones, horarios alternativos, DST, medianoche)
   power.py        Apagado programado: decisión por día (prioridades) y detección sin atrasos
+  musica_libre.py Instala la música libre incluida (CC0): copia a datos, pistas y lista «Recreo»
+  musica/         8 piezas MP3 originales + LEEME.txt (licencia CC0)
   vacaciones.py   vacaciones.json: lectura validada «todo o nada», escritura atómica con .bak,
                   solapes y duplicado de periodos para el año siguiente
   engine.py       Motor: temporizador, conflictos, cola, reanudación, errores, acciones manuales

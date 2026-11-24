@@ -14,6 +14,9 @@ sin servidor, sin cuentas, sin Internet y sin permisos de administrador.
   audio, tras X minutos o a una hora), archivo o lista, volumen propio, prioridad y qué hacer si
   coincide con otro. Crear, editar, duplicar, activar/desactivar, eliminar, copiar un día a otros.
   Varios horarios (ordinario, jornada reducida…). Vista semanal y próximas 24 horas.
+- **Música libre para recreos incluida**: 8 piezas instrumentales originales (unos 19 minutos:
+  pop, lo-fi, funky, estilo videojuego, ambiente) en **dominio público (CC0)**. Se pueden poner en
+  el patio y los pasillos sin pagar licencias. Un botón en la Biblioteca crea la lista «Recreo».
 - **Biblioteca de audio**: añadir archivos y carpetas (sin copiarlos ni moverlos), buscar,
   escuchar, listas secuenciales o aleatorias con repetición, ordenar, importar/exportar M3U,
   comprobar archivos y localizar de nuevo los que se hayan movido.
@@ -33,13 +36,13 @@ sin servidor, sin cuentas, sin Internet y sin permisos de administrador.
 Descargue la última versión desde la página de
 [**Releases**](../../releases/latest):
 
-- **Windows**: descargue y ejecute `AulaAudio-1.1.0-Windows-instalador.exe` (no pide administrador).
+- **Windows**: descargue y ejecute `AulaAudio-1.2.0-Windows-instalador.exe` (no pide administrador).
   Si Windows SmartScreen avisa de «editor desconocido», pulse *Más información → Ejecutar de todas formas*.
 
 ## Inicio rápido
 
-- **Windows**: ejecute `AulaAudio-1.1.0-Windows-instalador.exe` (no pide administrador).
-- **Linux**: descomprima `AulaAudio-1.1.0-Linux-x86_64.tar.gz` y ejecute `./instalar.sh`.
+- **Windows**: ejecute `AulaAudio-1.2.0-Windows-instalador.exe` (no pide administrador).
+- **Linux**: descomprima `AulaAudio-1.2.0-Linux-x86_64.tar.gz` y ejecute `./instalar.sh`.
 - **Desde el código fuente** (Windows o Linux, Python 3.10 o superior; probado con 3.12):
 
 ```bash
@@ -95,6 +98,8 @@ tests/                pruebas automatizadas (reloj simulado, sin sonido)
 packaging/            PyInstaller, instalador de Windows (Inno Setup) y paquete de Linux
 docs/                 manuales
 tools/make_icon.py    generación del icono
+tools/componer_musica.py  compositor de la música libre (reproducible)
+aulaaudio/musica/     música libre para recreos (CC0)
 ```
 
 ## Licencia

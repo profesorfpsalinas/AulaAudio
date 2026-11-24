@@ -1,5 +1,12 @@
 # Novedades
 
+## 1.2.0
+
+- **Música libre para recreos**: 8 piezas instrumentales originales (unos 19 minutos; pop, lo-fi,
+  funky, estilo videojuego y ambiente) en dominio público (CC0). Se pueden reproducir en el centro
+  sin licencias. Botón en *Biblioteca de audio* que crea la lista «Recreo — música libre».
+- `tools/componer_musica.py`: el compositor que las genera, para regenerarlas o crear más.
+
 ## 1.1.0
 
 - **Vacaciones y festivos mejorados.** En cada periodo se elige qué se suspende: la programación

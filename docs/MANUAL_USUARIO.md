@@ -67,6 +67,29 @@ Para salir de verdad: clic derecho en el icono → *Salir de AulaAudio…*.
 - Listas: *Nueva*, *Renombrar*, *Duplicar*, *Eliminar*, orden *Secuencial/Aleatorio*, *Repetir*,
   *Subir/Bajar*, *Importar/Exportar M3U*.
 
+### Música libre para recreos
+
+El botón **🎵 Añadir música libre para recreos** añade 8 piezas instrumentales originales
+(unos 19 minutos) y crea la lista **«Recreo — música libre»**, aleatoria y con repetición. Para
+usarla, cree en *Programación* un evento de tipo Música a la hora del recreo, elija esa lista y el
+fin «A una hora concreta». Las piezas se copian a la carpeta de datos del centro, así que no se
+pierden al actualizar el programa. Pulsar el botón otra vez no duplica nada (y recupera las piezas
+que se hubieran borrado).
+
+| Pieza | Estilo | Duración |
+|---|---|---|
+| Patio soleado | Pop alegre | 2:12 |
+| Bocadillo a la carrera | Videojuego clásico | 2:33 |
+| Siesta de nubes | Lo-fi tranquilo | 2:46 |
+| Rayuela | Funky | 2:19 |
+| Brisa en el pasillo | Ambiente suave | 2:28 |
+| Vuelta a clase | Pop con marimba | 2:11 |
+| Canicas | Pop enérgico | 2:19 |
+| Merienda tranquila | Lo-fi cálido | 2:34 |
+
+Son obras originales en **dominio público (CC0)**: se pueden reproducir en público sin licencias.
+El justificante (`LEEME.txt`) se guarda junto a las piezas.
+
 ## Calendario y excepciones
 
 - **Festivos, vacaciones y cambios**: *Festivo*, *Vacaciones* y *Día no lectivo*; *Cambio de

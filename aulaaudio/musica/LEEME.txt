@@ -1,0 +1,29 @@
+MÚSICA LIBRE PARA RECREOS — AulaAudio
+=====================================
+
+Estas 8 piezas instrumentales son obras ORIGINALES creadas para AulaAudio por composición
+algorítmica y síntesis de sonido (tools/componer_musica.py). No contienen muestras,
+grabaciones ni melodías de otras obras.
+
+Licencia: CC0 1.0 Universal (dedicación al dominio público)
+https://creativecommons.org/publicdomain/zero/1.0/deed.es
+
+En la medida en que lo permite la ley, se renuncia a todos los derechos de autor y conexos
+sobre estas piezas. Puede reproducirlas en público (pasillos, patio, entradas y salidas),
+copiarlas, modificarlas y distribuirlas, también con fines comerciales, sin pedir permiso,
+sin pagar y sin citar la procedencia. No están gestionadas por ninguna entidad de gestión
+de derechos.
+
+Conserve este archivo junto con la documentación del equipo de sonido como justificante de
+la licencia de la música que se reproduce en el centro.
+
+ 1. Patio soleado            · pop alegre               · 118 ppm · 2:12
+ 2. Bocadillo a la carrera   · estilo videojuego        · 140 ppm · 2:33
+ 3. Siesta de nubes          · lo-fi tranquilo          ·  82 ppm · 2:46
+ 4. Rayuela                  · funky                    · 112 ppm · 2:19
+ 5. Brisa en el pasillo      · ambiente suave           ·  92 ppm · 2:28
+ 6. Vuelta a clase           · pop con marimba          · 104 ppm · 2:11
+ 7. Canicas                  · pop enérgico             · 126 ppm · 2:19
+ 8. Merienda tranquila       · lo-fi cálido             ·  76 ppm · 2:34
+
+Duración total: unos 19 minutos. En una lista aleatoria con repetición cubre cualquier recreo.

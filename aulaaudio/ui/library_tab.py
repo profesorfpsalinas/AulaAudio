@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .. import library
+from .. import library, musica_libre
 from ..models import Playlist
 from .common import AppContext, ask, error, guarded, help_label, info
 from .event_dialog import AUDIO_FILTER
@@ -43,7 +43,8 @@ class LibraryTab(QWidget):
         self.ctx = ctx
         root = QVBoxLayout(self)
         root.addWidget(help_label("AulaAudio no copia ni mueve sus archivos: solo recuerda dónde están. "
-                                  "Recuerde que el centro debe tener derechos para reproducir públicamente la música."))
+                                  "Recuerde que el centro debe tener derechos para reproducir públicamente la música, o use "
+                                  "la música libre para recreos incluida (dominio público)."))
         split = QSplitter(Qt.Orientation.Horizontal)
         root.addWidget(split, 1)
 
@@ -82,6 +83,14 @@ class LibraryTab(QWidget):
             row.addStretch(1)
         ll.addLayout(r1)
         ll.addLayout(r2)
+        r3 = QHBoxLayout()
+        self.btn_free_music = QPushButton("🎵 Añadir música libre para recreos")
+        self.btn_free_music.setToolTip("8 piezas instrumentales originales (unos 19 min) en dominio público: "
+                                       "se pueden reproducir en el centro sin licencias.")
+        self.btn_free_music.clicked.connect(self._add_free_music)
+        r3.addWidget(self.btn_free_music)
+        r3.addStretch(1)
+        ll.addLayout(r3)
         split.addWidget(left)
 
         # ---------------- listas
@@ -216,6 +225,20 @@ class LibraryTab(QWidget):
                 self._changed()
                 extra = "\nLa carpeta tenía demasiados archivos; solo se han añadido los primeros." if res.truncated else ""
                 info(self, "Añadir carpeta", f"Añadidos: {res.added}. Ya estaban: {res.already}.{extra}")
+
+    def _add_free_music(self) -> None:
+        res = guarded(self, lambda: musica_libre.install(self.ctx.db, self.ctx.paths.data_dir))
+        if res is None:
+            return
+        self._changed()
+        pl = "Se ha creado" if res.playlist_created else "Se ha completado"
+        info(self, "Música libre para recreos",
+             f"Piezas añadidas: {res.added}" + (f" (ya estaban: {res.already})" if res.already else "") + ".\n"
+             f"{pl} la lista «{musica_libre.PLAYLIST_NAME}» (aleatoria y con repetición).\n\n"
+             "Para usarla, cree en «Programación» un evento de música para el recreo y elija esa lista, "
+             "con fin «A una hora concreta».\n\n"
+             "Son obras originales en dominio público (CC0): se pueden reproducir en público sin licencias. "
+             f"El justificante está en {res.folder / musica_libre.LICENSE_FILE}.")
 
     def _listen(self) -> None:
         ids = self._selected_track_ids()
