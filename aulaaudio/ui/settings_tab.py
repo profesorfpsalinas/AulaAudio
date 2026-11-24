@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from zoneinfo import available_timezones
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import Qt, QTime, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -16,12 +16,14 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSlider,
     QSpinBox,
+    QTimeEdit,
     QVBoxLayout,
     QWidget,
 )
 
 from .. import demo, sounds, system
 from ..config import DEVICE_FALLBACK_DEFAULT, DEVICE_FALLBACK_NONE
+from ..models import DAY_SHORT, parse_hhmm
 from .common import AppContext, ask, error, guarded, help_label, info
 
 
@@ -116,6 +118,36 @@ class SettingsTab(QWidget):
             f.addRow("", help_label("En Linux, configure la suspensión desde los ajustes de energía del escritorio."))
         lay.addWidget(g)
 
+        # ---------------- apagado programado
+        g = QGroupBox("Apagado programado del equipo")
+        f = QFormLayout(g)
+        f.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
+        self.off_on = QCheckBox("Apagar el equipo automáticamente al terminar la jornada")
+        f.addRow(self.off_on)
+        self.off_time = QTimeEdit()
+        self.off_time.setDisplayFormat("HH:mm")
+        f.addRow("Hora del apagado:", self.off_time)
+        days = QHBoxLayout()
+        self.off_days = []
+        for i, short in enumerate(DAY_SHORT):
+            cb = QCheckBox(short)
+            cb.setToolTip(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"][i])
+            self.off_days.append(cb)
+            days.addWidget(cb)
+        days.addStretch(1)
+        f.addRow("Días:", days)
+        self.off_warn = QSpinBox()
+        self.off_warn.setRange(1, 30)
+        self.off_warn.setSuffix(" min")
+        f.addRow("Aviso previo (cancelable):", self.off_warn)
+        f.addRow("", help_label("A la hora indicada aparece una cuenta atrás que cualquiera puede cancelar; al "
+                                "terminar, el equipo se apaga. No se apaga los festivos y vacaciones que lo indiquen "
+                                "(«Calendario y excepciones»), ni si la automatización está desactivada. Si el "
+                                "equipo no estaba encendido a esa hora, no se apaga con retraso. AulaAudio no puede "
+                                "encender el equipo: el encendido depende de la BIOS/UEFI o de una persona."))
+        self.off_on.toggled.connect(self._update_shutdown_widgets)
+        lay.addWidget(g)
+
         # ---------------- datos
         g = QGroupBox("Datos")
         f = QFormLayout(g)
@@ -199,6 +231,13 @@ class SettingsTab(QWidget):
         self.start_min.setChecked(s.iniciar_minimizado)
         self.tray.setChecked(s.minimizar_a_bandeja)
         self.sleep.setChecked(s.impedir_suspension)
+        self.off_on.setChecked(s.apagado_activo)
+        t = parse_hhmm(s.apagado_hora)
+        self.off_time.setTime(QTime(t.hour, t.minute))
+        for i, cb in enumerate(self.off_days):
+            cb.setChecked(i in s.apagado_dias)
+        self.off_warn.setValue(s.apagado_aviso_minutos)
+        self._update_shutdown_widgets()
         self.hist_days.setValue(s.dias_historial)
         self.auto_backup.setChecked(s.copia_automatica)
         self.keep.setValue(s.copias_automaticas_a_conservar)
@@ -222,6 +261,19 @@ class SettingsTab(QWidget):
         s.iniciar_minimizado = self.start_min.isChecked()
         s.minimizar_a_bandeja = self.tray.isChecked()
         s.impedir_suspension = self.sleep.isChecked()
+        off_days = [i for i, cb in enumerate(self.off_days) if cb.isChecked()]
+        if self.off_on.isChecked() and not off_days:
+            error(self, "Apagado programado", "Marque al menos un día para el apagado programado.")
+            return
+        if self.off_on.isChecked() and not s.apagado_activo:
+            if not ask(self, "Apagado programado", "El equipo se apagará solo a las "
+                       f"{self.off_time.time().toString('HH:mm')} los días marcados (con un aviso previo que se "
+                       "puede cancelar). ¿Activarlo?", yes="Activar"):
+                return
+        s.apagado_activo = self.off_on.isChecked()
+        s.apagado_hora = self.off_time.time().toString("HH:mm")
+        s.apagado_dias = off_days
+        s.apagado_aviso_minutos = self.off_warn.value()
         s.dias_historial = self.hist_days.value()
         s.copia_automatica = self.auto_backup.isChecked()
         s.copias_automaticas_a_conservar = self.keep.value()
@@ -236,6 +288,11 @@ class SettingsTab(QWidget):
         else:
             error(self, "Configuración", "No se ha podido guardar la configuración en el disco. "
                   "Compruebe el espacio libre y los permisos de la carpeta de configuración.")
+
+    def _update_shutdown_widgets(self) -> None:
+        on = self.off_on.isChecked()
+        for w in [self.off_time, self.off_warn, *self.off_days]:
+            w.setEnabled(on)
 
     def _test(self) -> None:
         path = guarded(self, lambda: sounds.test_sound(self.ctx.paths.data_dir))

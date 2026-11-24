@@ -4,8 +4,9 @@ Módulo de lógica pura (sin Qt ni sonido), probado con reloj simulado.
 
 Reglas:
 1. Cada día local se decide qué horario se aplica:
-   - Si alguna excepción de tipo festivo/vacaciones/no lectivo cubre la fecha: no suena
-     ningún evento semanal ese día.
+   - Si alguna excepción de tipo festivo/vacaciones/no lectivo con «suspender sonidos»
+     cubre la fecha: no suena ningún evento semanal ese día (si coinciden varias
+     excepciones se aplica la más restrictiva).
    - Si no, si una excepción «cambio de horario» cubre la fecha: se usa ese horario.
    - Si no, el horario ordinario.
    Las excepciones siempre prevalecen sobre la programación ordinaria.
@@ -31,7 +32,6 @@ from .models import (
     END_TIME,
     EXC_ALT,
     EXCEPTION_KINDS,
-    SILENT_EXCEPTIONS,
     CalendarException,
     Event,
 )
@@ -102,7 +102,7 @@ class Scheduler:
 
     def _compute_day_plan(self, d: date) -> DayPlan:
         exc = [e for e in self.data.exceptions if e.covers(d)]
-        silent = [e for e in exc if e.kind in SILENT_EXCEPTIONS]
+        silent = [e for e in exc if e.silences]
         alt = [e for e in exc if e.kind == EXC_ALT and e.schedule_id is not None]
         sched_id: int | None
         if silent:

@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "vacaciones": [
+    {
+      "nombre": "Navidad",
+      "fecha_inicio": "2026-12-23",
+      "fecha_fin": "2027-01-07",
+      "tipo": "vacaciones",
+      "desactivar_sonidos": true,
+      "desactivar_apagado": true
+    },
+    {
+      "nombre": "Semana Santa",
+      "fecha_inicio": "2027-03-22",
+      "fecha_fin": "2027-03-29",
+      "tipo": "vacaciones",
+      "desactivar_sonidos": true,
+      "desactivar_apagado": true
+    },
+    {
+      "nombre": "Vacaciones de verano",
+      "fecha_inicio": "2027-07-01",
+      "fecha_fin": "2027-08-31",
+      "tipo": "vacaciones",
+      "desactivar_sonidos": true,
+      "desactivar_apagado": true
+    }
+  ],
+  "dias_sueltos": [
+    "2026-12-08",
+    {
+      "fecha": "2027-01-06",
+      "nombre": "Reyes",
+      "desactivar_sonidos": true,
+      "desactivar_apagado": true
+    }
+  ]
+}

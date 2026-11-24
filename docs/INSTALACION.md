@@ -10,7 +10,7 @@ AulaAudio **no necesita permisos de administrador** ni conexión a Internet una 
 
 ## Windows — con el instalador (recomendado)
 
-1. Ejecute `AulaAudio-1.0.0-Windows-instalador.exe`.
+1. Ejecute `AulaAudio-1.1.0-Windows-instalador.exe`.
    Si Windows SmartScreen muestra «Windows protegió su PC», pulse *Más información → Ejecutar de
    todas formas* (el instalador no está firmado digitalmente).
 2. Siga el asistente. Se instala en `%LOCALAPPDATA%\Programs\AulaAudio` con accesos en el menú Inicio.
@@ -21,8 +21,8 @@ Versión portable (sin instalar): copie la carpeta `dist\AulaAudio` y ejecute `A
 ## Linux — paquete .tar.gz
 
 ```bash
-tar xzf AulaAudio-1.0.0-Linux-x86_64.tar.gz
-cd AulaAudio-1.0.0-Linux-x86_64
+tar xzf AulaAudio-1.1.0-Linux-x86_64.tar.gz
+cd AulaAudio-1.1.0-Linux-x86_64
 ./instalar.sh
 ```
 
@@ -67,7 +67,7 @@ powershell -ExecutionPolicy Bypass -File packaging\windows\build_windows.ps1
 
 El script ejecuta las pruebas (si fallan, no construye), genera el icono, construye con PyInstaller
 (`dist\AulaAudio`), comprueba el ejecutable con `--diagnostico` y compila el instalador en
-`dist\instalador\AulaAudio-1.0.0-Windows-instalador.exe`.
+`dist\instalador\AulaAudio-1.1.0-Windows-instalador.exe`.
 
 **Linux** (en una máquina Linux x86_64):
 
@@ -76,5 +76,5 @@ sudo apt install python3-venv libxcb-cursor0 libpulse0 libegl1   # Debian/Ubuntu
 bash packaging/linux/build_linux.sh
 ```
 
-Resultado: `dist-linux/AulaAudio-1.0.0-Linux-x86_64.tar.gz`. Constrúyalo en la versión de Linux
+Resultado: `dist-linux/AulaAudio-1.1.0-Linux-x86_64.tar.gz`. Constrúyalo en la versión de Linux
 más antigua que vaya a usar (el ejecutable depende de la versión de glibc del sistema donde se crea).

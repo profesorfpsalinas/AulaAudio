@@ -27,6 +27,9 @@ Reglas de reproducción
   todas las pistas de una vuelta, la sesión se detiene (no hay bucles infinitos).
 * Errores de dispositivo: se intenta recuperar una única vez; si vuelve a fallar se detiene
   y se avisa. Nunca se reintenta indefinidamente.
+* Apagado programado (power.py): a la hora indicada emite `shutdown_requested` y la ventana
+  muestra una cuenta atrás cancelable. Se suspende en vacaciones/festivos que lo indiquen,
+  nunca se hace con retraso y no se hace si no se pudo leer la programación.
 """
 from __future__ import annotations
 
@@ -47,6 +50,7 @@ from .models import (
     Track,
     fmt_hhmm,
 )
+from .power import BLOCKED, MISSED, SHUTDOWN, SUSPENDED, ShutdownPlanner
 from .scheduler import Occurrence, ScheduleData, Scheduler
 
 log = logging.getLogger(__name__)
@@ -94,6 +98,7 @@ class PlaybackEngine(QObject):
     changed = Signal()  # cambia lo que suena, la cola o el estado
     incident = Signal(str, str)  # nivel (aviso|error), mensaje comprensible
     history_logged = Signal()
+    shutdown_requested = Signal(str)  # hora local HH:MM del apagado: la interfaz muestra la cuenta atrás
 
     def __init__(self, db, settings: Settings, backend: AudioBackend, clock, parent=None):
         super().__init__(parent)
@@ -110,6 +115,8 @@ class PlaybackEngine(QObject):
         self.last_incident: tuple[str, str] | None = None
         self._token = -1
         self.file_exists = os.path.isfile  # sustituible en la simulación
+        self.data_ok = True  # False si la última lectura de la programación falló
+        self.power = ShutdownPlanner()
         self.scheduler = Scheduler(ScheduleData([], [], 0, {}), settings.zona_horaria)
         self.backend.finished.connect(self._on_finished)
         self.backend.failed.connect(self._on_failed)
@@ -135,8 +142,11 @@ class PlaybackEngine(QObject):
         try:
             data = ScheduleData.from_db(self.db)
         except Exception as exc:  # se conserva la programación anterior en memoria
-            self._incident("error", f"No se ha podido leer la programación: {exc}")
+            self.data_ok = False
+            self._incident("error", f"No se ha podido leer la programación: {exc}. "
+                           "Mientras tanto no se apagará el equipo automáticamente.")
             return
+        self.data_ok = True
         self.scheduler = Scheduler(data, self.settings.zona_horaria)
         self.changed.emit()
 
@@ -221,6 +231,9 @@ class PlaybackEngine(QObject):
                     continue
                 self._offer(occ, now)
 
+        # 3b) apagado programado del equipo
+        self._check_shutdown(window_start, now, margin)
+
         # 4) si no suena nada, atender la cola
         if self.current is None:
             self._start_next_pending(now)
@@ -228,6 +241,40 @@ class PlaybackEngine(QObject):
         cutoff = now - timedelta(days=3)
         self.fired = {k: v for k, v in self.fired.items() if v > cutoff}
         self.changed.emit()
+
+    # ------------------------------------------------------------------ apagado
+    def _check_shutdown(self, window_start: datetime, now: datetime, margin: timedelta) -> None:
+        found = self.power.check(window_start, now, self.settings, self.scheduler.data.exceptions,
+                                 self.scheduler.tz, self.data_ok, margin)
+        if found is None:
+            return
+        action, dec = found
+        hhmm = self._hm(dec.when_utc)
+        if action == SHUTDOWN:
+            self._record("aviso", "apagado", f"Hora del apagado programado ({hhmm}): se muestra la cuenta atrás.")
+            self.shutdown_requested.emit(hhmm)
+        elif action == SUSPENDED:
+            self._record("info", "apagado", f"Apagado de las {hhmm} suspendido. {dec.suspended_by}")
+        elif action == MISSED:
+            self._record("aviso", "apagado", f"Apagado de las {hhmm} omitido: el programa no estaba funcionando "
+                         "a esa hora (no se apaga con retraso).")
+        elif action == BLOCKED:
+            self._incident("error", f"Apagado de las {hhmm} cancelado por seguridad: no se pudo leer la "
+                           "programación ni el calendario.")
+
+    def next_shutdown_text(self) -> str:
+        """Texto breve con el próximo apagado (o vacío si no hay ninguno previsto)."""
+        if not self.settings.apagado_activo:
+            return ""
+        dec = self.power.next_shutdown(self.clock.now(), self.settings, self.scheduler.data.exceptions,
+                                       self.scheduler.tz)
+        if dec is None:
+            return "Sin apagados previstos en el próximo mes."
+        local = self.scheduler.local(dec.when_utc)
+        today = self.scheduler.local(self.clock.now()).date()
+        day = "hoy" if local.date() == today else "mañana" if local.date() == today + timedelta(days=1) \
+            else local.strftime("%d/%m")
+        return f"Próximo apagado del equipo: {day} a las {local:%H:%M}"
 
     # ------------------------------------------------------------------ conflictos
     def _offer(self, occ: Occurrence, now: datetime) -> None:

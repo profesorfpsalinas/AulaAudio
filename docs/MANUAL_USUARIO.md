@@ -69,20 +69,47 @@ Para salir de verdad: clic derecho en el icono → *Salir de AulaAudio…*.
 
 ## Calendario y excepciones
 
-- **Festivos, vacaciones y cambios**: *Festivo*, *Vacaciones* y *Día no lectivo* silencian la
-  programación semanal; *Cambio de horario* usa otro horario esos días. Las excepciones prevalecen
-  siempre sobre el horario ordinario; si coinciden, gana la que silencia.
+- **Festivos, vacaciones y cambios**: *Festivo*, *Vacaciones* y *Día no lectivo*; *Cambio de
+  horario* usa otro horario esos días. En cada periodo se elige **qué se suspende**:
+  - *Silenciar la programación de sonidos*: no suena ningún evento semanal.
+  - *No apagar el equipo*: ese día no se hace el apagado programado (ver Configuración).
+  Las fechas «desde» y «hasta» están incluidas. Las excepciones prevalecen siempre sobre el horario
+  ordinario y, si coinciden varias, se aplica la **más restrictiva**. Al terminar el periodo vuelve
+  sola la programación habitual (no se ejecuta nada atrasado). Los horarios semanales no se borran.
+  - **Duplicar para el año siguiente**: seleccione uno o varios periodos (Ctrl o Mayús) y se crean
+    con las mismas fechas un año después. Revise las fechas que cambian (Semana Santa, Carnaval).
+  - **Importar / Exportar vacaciones.json**: ver [VACACIONES.md](VACACIONES.md). Antes de importar
+    se hace una copia de seguridad; si el archivo tiene errores no se importa nada.
+  - Si dos periodos se solapan, el programa lo avisa al guardarlos y bajo la lista.
 - **Eventos extraordinarios**: suenan solo en su fecha (también en festivos).
 - **Consultar una fecha**: elija un día en el calendario y verá qué sonará y por qué.
-  En rojo, días sin sonido; en naranja, días con otro horario.
+  En rojo, días sin sonido; en naranja, días con otro horario; en azul, días en los que solo se
+  suspende el apagado. Si el apagado programado está activo, también indica si ese día se apagará.
 - **Simulación**: avanza virtualmente por un periodo aplicando todas las reglas, sin sonido.
 
 ## Configuración
 
 Dispositivo de salida y qué hacer si se desconecta, volumen general, fundido final, automatización,
 retraso máximo admitido, prioridad manual, zona horaria, inicio automático, bandeja, evitar la
-suspensión (Windows), conservación del historial, copias automáticas y datos de ejemplo.
-Pulse **Guardar cambios** para aplicar.
+suspensión (Windows), **apagado programado**, conservación del historial, copias automáticas y datos
+de ejemplo. Pulse **Guardar cambios** para aplicar.
+
+### Apagado programado del equipo
+
+Desactivado por defecto. Al activarlo se elige la hora, los días y los minutos de aviso. A esa hora
+aparece una ventana con una cuenta atrás y los botones **Cancelar el apagado de hoy** y **Apagar
+ahora**; si nadie la cancela, AulaAudio detiene el sonido y apaga el equipo. En *Inicio* se muestra
+el próximo apagado previsto.
+
+Orden de prioridad: 1) automatización desactivada manualmente (no se apaga); 2) vacaciones, días no
+lectivos y cambios de horario con «No apagar el equipo»; 3) festivos y días sueltos con esa opción;
+4) días y hora de Configuración. Si el programa no estaba funcionando a la hora del apagado, ese día
+no se apaga (nunca se apaga con retraso). Si no se puede leer la programación, tampoco se apaga.
+
+**Encendido:** AulaAudio no puede encender un equipo apagado. Para que se encienda solo, configure
+el encendido programado en la BIOS/UEFI del equipo («Power On by RTC», «Wake on RTC» o similar) o
+en el propio aula; en vacaciones el equipo se encenderá igualmente, pero no sonará nada si el
+periodo silencia los sonidos.
 
 ## Historial e incidencias
 

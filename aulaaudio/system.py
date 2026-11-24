@@ -6,7 +6,8 @@
   Linux: archivo ~/.config/autostart/aulaaudio.desktop (estándar XDG).
 - Evitar la suspensión automática mientras el programa está abierto (Windows,
   SetThreadExecutionState; se deshace al cerrar). No modifica la configuración de energía.
-No se ejecuta ningún comando de shell.
+- Apagado programado: ejecuta la orden de apagado del propio sistema (Windows: shutdown.exe;
+  Linux: systemctl poweroff) con argumentos fijos y sin pasar por una consola (shell=False).
 """
 from __future__ import annotations
 
@@ -137,3 +138,30 @@ class SleepInhibitor:
 
             ctypes.windll.kernel32.SetThreadExecutionState(self.ES_CONTINUOUS)
             self.active = False
+
+
+def shutdown_command() -> list[str]:
+    """Orden de apagado del sistema (argumentos fijos, sin datos del usuario)."""
+    if sys.platform == "win32":
+        system_root = os.environ.get("SystemRoot", r"C:\Windows")
+        return [str(Path(system_root) / "System32" / "shutdown.exe"), "/s", "/t", "0"]
+    return ["systemctl", "poweroff"]
+
+
+def shutdown_computer() -> tuple[bool, str]:
+    """Apaga el equipo. Devuelve (correcto, mensaje). No necesita permisos de administrador
+    en un equipo de sobremesa con la sesión del usuario iniciada."""
+    import subprocess
+
+    cmd = shutdown_command()
+    try:
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        res = subprocess.run(cmd, shell=False, capture_output=True, text=True, timeout=30, creationflags=flags)
+    except (OSError, subprocess.SubprocessError) as exc:
+        logging.getLogger(__name__).error("No se pudo apagar el equipo: %s", exc)
+        return False, f"No se ha podido ejecutar la orden de apagado ({exc})."
+    if res.returncode != 0:
+        detail = (res.stderr or res.stdout or "").strip()[:300]
+        logging.getLogger(__name__).error("La orden de apagado falló (%s): %s", res.returncode, detail)
+        return False, "El sistema no ha permitido apagar el equipo" + (f": {detail}" if detail else ".")
+    return True, "Apagando el equipo."

@@ -28,7 +28,7 @@ from .models import (
 
 log = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA_V1 = """
 CREATE TABLE schedules (
@@ -102,7 +102,13 @@ CREATE TABLE history (
 CREATE INDEX idx_history_ts ON history(ts);
 """
 
-MIGRATIONS = {1: SCHEMA_V1}
+# v2 (AulaAudio 1.1): qué suspende cada festivo/periodo (sonidos y apagado programado).
+SCHEMA_V2 = """
+ALTER TABLE calendar_exceptions ADD COLUMN suspend_sounds INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE calendar_exceptions ADD COLUMN suspend_shutdown INTEGER NOT NULL DEFAULT 1
+"""
+
+MIGRATIONS = {1: SCHEMA_V1, 2: SCHEMA_V2}
 
 
 class DatabaseError(RuntimeError):
@@ -466,21 +472,49 @@ class Database:
     @staticmethod
     def _row_to_exc(r: sqlite3.Row) -> CalendarException:
         return CalendarException(r["id"], r["name"], r["kind"], date.fromisoformat(r["date_from"]),
-                                 date.fromisoformat(r["date_to"]), r["schedule_id"], r["notes"])
+                                 date.fromisoformat(r["date_to"]), r["schedule_id"], r["notes"],
+                                 bool(r["suspend_sounds"]), bool(r["suspend_shutdown"]))
 
     def exceptions(self) -> list[CalendarException]:
         return [self._row_to_exc(r) for r in self.q("SELECT * FROM calendar_exceptions ORDER BY date_from")]
 
     def save_exception(self, e: CalendarException) -> int:
         e.validate()
-        params = (e.name, e.kind, e.date_from.isoformat(), e.date_to.isoformat(), e.schedule_id, e.notes)
+        params = (e.name, e.kind, e.date_from.isoformat(), e.date_to.isoformat(), e.schedule_id, e.notes,
+                  int(e.suspend_sounds), int(e.suspend_shutdown))
         if e.id is None:
-            e.id = self.x("INSERT INTO calendar_exceptions(name, kind, date_from, date_to, schedule_id, notes) "
-                          "VALUES (?,?,?,?,?,?)", params)
+            e.id = self.x("INSERT INTO calendar_exceptions(name, kind, date_from, date_to, schedule_id, notes, "
+                          "suspend_sounds, suspend_shutdown) VALUES (?,?,?,?,?,?,?,?)", params)
         else:
             self.x("UPDATE calendar_exceptions SET name=?, kind=?, date_from=?, date_to=?, schedule_id=?, "
-                   "notes=? WHERE id=?", params + (e.id,))
+                   "notes=?, suspend_sounds=?, suspend_shutdown=? WHERE id=?", params + (e.id,))
         return e.id
+
+    def save_exceptions(self, items: list[CalendarException], replace_kinds: tuple[str, ...] = ()) -> int:
+        """Guarda varias excepciones en una sola transacción (todo o nada).
+
+        Si `replace_kinds` no está vacío, antes se eliminan las excepciones de esos tipos.
+        """
+        for e in items:
+            e.validate()
+        try:
+            self._save_many(items, replace_kinds)
+        except sqlite3.Error as exc:
+            raise DatabaseError("No se han podido guardar los periodos: " + str(exc)) from exc
+        return len(items)
+
+    def _save_many(self, items: list[CalendarException], replace_kinds: tuple[str, ...]) -> None:
+        with self.tx() as conn:
+            if replace_kinds:
+                conn.execute(f"DELETE FROM calendar_exceptions WHERE kind IN ({','.join('?' * len(replace_kinds))})",
+                             tuple(replace_kinds))
+            for e in items:
+                cur = conn.execute(
+                    "INSERT INTO calendar_exceptions(name, kind, date_from, date_to, schedule_id, notes, "
+                    "suspend_sounds, suspend_shutdown) VALUES (?,?,?,?,?,?,?,?)",
+                    (e.name, e.kind, e.date_from.isoformat(), e.date_to.isoformat(), e.schedule_id, e.notes,
+                     int(e.suspend_sounds), int(e.suspend_shutdown)))
+                e.id = cur.lastrowid
 
     def delete_exception(self, xid: int) -> None:
         self.x("DELETE FROM calendar_exceptions WHERE id = ?", (xid,))

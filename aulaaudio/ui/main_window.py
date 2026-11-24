@@ -19,12 +19,13 @@ from PySide6.QtWidgets import (
 from .. import APP_NAME, __version__, demo
 from .backup_tab import BackupTab
 from .calendar_tab import CalendarTab
-from .common import AppContext, ask, guarded, info
+from .common import AppContext, ask, error, guarded, info
 from .history_tab import HistoryTab
 from .home import HomeTab
 from .library_tab import LibraryTab
 from .schedule_tab import ScheduleTab
 from .settings_tab import SettingsTab
+from .shutdown_dialog import ShutdownDialog
 
 
 def make_icon_pixmap(size: int = 256, color: str = "#0b63b6") -> QPixmap:
@@ -62,7 +63,9 @@ class MainWindow(QMainWindow):
     def __init__(self, ctx: AppContext, simulated: bool = False):
         super().__init__()
         self.ctx = ctx
+        self.simulated = simulated
         self._really_quit = False
+        self._shutdown_dialog: ShutdownDialog | None = None
         self.setWindowTitle(f"{APP_NAME} {__version__}" + (" — MODO SIMULACIÓN" if simulated else ""))
         self.setWindowIcon(app_icon())
         self.resize(1180, 800)
@@ -94,6 +97,7 @@ class MainWindow(QMainWindow):
         self._setup_tray()
         ctx.engine.incident.connect(self._on_incident)
         ctx.engine.changed.connect(self._update_tray)
+        ctx.engine.shutdown_requested.connect(self._on_shutdown_requested)
 
     def _go(self, widget, sub: int | None = None) -> None:
         self.tabs.setCurrentWidget(widget)
@@ -144,6 +148,44 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(message, 15000)
         if self.tray is not None and level == "error" and not self.isVisible():
             self.tray.showMessage("AulaAudio: incidencia", message[:250], QSystemTrayIcon.MessageIcon.Warning, 10000)
+
+    # ----------------------------------------------------------------- apagado programado
+    def _on_shutdown_requested(self, hhmm: str) -> None:
+        if self._shutdown_dialog is not None:
+            return
+        dlg = ShutdownDialog(hhmm, self.ctx.settings.apagado_aviso_minutos, self)
+        dlg.confirmed.connect(self._do_shutdown)
+        dlg.cancelled.connect(lambda: self._shutdown_cancelled(hhmm))
+        dlg.finished.connect(lambda *_: setattr(self, "_shutdown_dialog", None))
+        self._shutdown_dialog = dlg
+        if self.tray is not None:
+            self.tray.showMessage("AulaAudio", f"El equipo se apagará en {self.ctx.settings.apagado_aviso_minutos} "
+                                  "min. Puede cancelarlo.", QSystemTrayIcon.MessageIcon.Warning, 10000)
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()
+
+    def _shutdown_cancelled(self, hhmm: str) -> None:
+        self.ctx.db.add_history("aviso", "apagado", f"Apagado de las {hhmm} cancelado por el usuario.")
+        self.history.refresh()
+
+    def _do_shutdown(self) -> None:
+        from .. import system
+
+        if self.simulated:
+            self.ctx.db.add_history("info", "apagado", "Modo simulación: el equipo NO se apaga.")
+            info(self, "Apagado programado", "Modo simulación: en el uso real el equipo se apagaría ahora.")
+            return
+        self.ctx.engine.stop()
+        self.ctx.db.add_history("aviso", "apagado", "Apagando el equipo (apagado programado).")
+        ok, msg = system.shutdown_computer()
+        if ok:
+            self._really_quit = True
+            QApplication.instance().quit()
+        else:
+            self.ctx.db.add_history("error", "apagado", msg)
+            self.show_normal()
+            error(self, "Apagado programado", msg + "\n\nApague el equipo manualmente.")
 
     # ----------------------------------------------------------------- cierre
     def closeEvent(self, event) -> None:

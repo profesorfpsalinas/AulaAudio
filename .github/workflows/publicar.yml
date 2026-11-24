@@ -1,0 +1,94 @@
+# Pruebas, construcción del instalador de Windows y publicación de la versión.
+#
+# Las pruebas se ejecutan en cada rama. En «main», si la versión de aulaaudio/__init__.py todavía
+# no está publicada (no existe la etiqueta vX.Y.Z), crea la versión en «Releases» con el instalador.
+name: Pruebas y publicación
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Pruebas automáticas
+        run: python -m pytest -q -p no:cacheprovider
+
+      - name: Versión
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(python -c "import aulaaudio; print(aulaaudio.__version__)")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "publicar=no" >> "$GITHUB_OUTPUT"
+            echo "Rama $GITHUB_REF_NAME: solo se ejecutan las pruebas."
+          elif gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "publicar=no" >> "$GITHUB_OUTPUT"
+            echo "La versión v$VERSION ya está publicada: solo se ejecutan las pruebas."
+          else
+            echo "publicar=si" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Construir el programa (PyInstaller)
+        if: steps.version.outputs.publicar == 'si'
+        run: |
+          python tools\make_icon.py
+          python -m PyInstaller packaging\aulaaudio.spec --noconfirm --distpath dist --workpath build
+
+      - name: Construir el instalador (Inno Setup)
+        if: steps.version.outputs.publicar == 'si'
+        shell: pwsh
+        run: |
+          $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") |
+              Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) {
+              choco install innosetup -y --no-progress
+              $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" "packaging\windows\AulaAudio.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup ha fallado." }
+          Get-ChildItem dist\instalador
+
+      - name: Publicar la versión
+        if: steps.version.outputs.publicar == 'si'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          NOTES="packaging/notas/$V.md"
+          [ -f "$NOTES" ] || NOTES="CAMBIOS.md"
+          gh release create "v$V" "dist/instalador/AulaAudio-$V-Windows-instalador.exe" \
+            --target "$GITHUB_SHA" --title "AulaAudio $V" --notes-file "$NOTES" --latest
+
+      - name: Guardar el instalador como artefacto
+        if: steps.version.outputs.publicar == 'si'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AulaAudio-${{ steps.version.outputs.version }}-Windows
+          path: dist/instalador/*.exe

@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import shutil
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -37,6 +37,12 @@ class Settings:
     dias_historial: int = 180
     copia_automatica: bool = True
     copias_automaticas_a_conservar: int = 14
+    # Apagado programado del equipo (desactivado por defecto). Se suspende los días de
+    # festivos y vacaciones que lo indiquen, y si la automatización está desactivada.
+    apagado_activo: bool = False
+    apagado_hora: str = "15:30"  # HH:MM, hora local
+    apagado_dias: list = field(default_factory=lambda: [0, 1, 2, 3, 4])  # 0 = lunes
+    apagado_aviso_minutos: int = 5  # cuenta atrás cancelable antes de apagar
     primera_ejecucion_completada: bool = False
     aviso_bandeja_mostrado: bool = False
 
@@ -53,6 +59,12 @@ class Settings:
             s.si_falta_dispositivo = DEVICE_FALLBACK_DEFAULT
         if not isinstance(s.zona_horaria, str) or not _valid_tz(s.zona_horaria):
             s.zona_horaria = "Europe/Madrid"
+        s.apagado_aviso_minutos = _clamp(s.apagado_aviso_minutos, 1, 30, 5)
+        s.apagado_hora = _valid_hhmm(s.apagado_hora, "15:30")
+        try:
+            s.apagado_dias = sorted({int(d) for d in s.apagado_dias if 0 <= int(d) <= 6})
+        except (TypeError, ValueError):
+            s.apagado_dias = [0, 1, 2, 3, 4]
         s.dispositivo_id = str(s.dispositivo_id or "")[:500]
         s.dispositivo_nombre = str(s.dispositivo_nombre or "")[:300]
         for f in fields(Settings):
@@ -67,6 +79,17 @@ def _clamp(value, lo, hi, default):
     except (TypeError, ValueError):
         return default
     return max(lo, min(hi, v))
+
+
+def _valid_hhmm(value, default: str) -> str:
+    try:
+        hh, mm = str(value).strip().split(":")[:2]
+        h, m = int(hh), int(mm)
+        if 0 <= h <= 23 and 0 <= m <= 59:
+            return f"{h:02d}:{m:02d}"
+    except (ValueError, AttributeError):
+        pass
+    return default
 
 
 def _valid_tz(name: str) -> bool:

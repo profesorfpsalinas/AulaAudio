@@ -6,7 +6,9 @@
 ; Compilar:  ISCC.exe packaging\windows\AulaAudio.iss   (tras construir dist\AulaAudio con PyInstaller)
 
 #define AppName "AulaAudio"
-#define AppVersion "1.0.0"
+#ifndef AppVersion
+  #define AppVersion "1.1.0"
+#endif
 #define AppExe "AulaAudio.exe"
 
 [Setup]

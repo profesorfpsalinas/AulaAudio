@@ -18,8 +18,12 @@ sin servidor, sin cuentas, sin Internet y sin permisos de administrador.
   escuchar, listas secuenciales o aleatorias con repetición, ordenar, importar/exportar M3U,
   comprobar archivos y localizar de nuevo los que se hayan movido.
 - **Calendario y excepciones**: festivos, vacaciones, días no lectivos, cambios de horario y
-  eventos extraordinarios de una fecha. Consultar qué sonará cualquier día. **Simulación**: recorre
+  eventos extraordinarios de una fecha. En cada periodo se elige qué se suspende (sonidos, apagado
+  del equipo o ambos). **Importar/exportar `vacaciones.json`**, duplicar periodos para el año
+  siguiente y avisos de solapes. Consultar qué sonará cualquier día. **Simulación**: recorre
   virtualmente un día con las reglas reales sin emitir sonido.
+- **Apagado programado del equipo** (opcional): a la hora indicada, cuenta atrás cancelable y
+  apagado; se suspende solo en festivos y vacaciones.
 - **Configuración**: dispositivo de salida, volumen, fundido, inicio automático, bandeja del
   sistema, evitar suspensión, zona horaria, copias automáticas, datos de ejemplo.
 - **Historial e incidencias** y **Copias de seguridad / restauración**.
@@ -29,13 +33,13 @@ sin servidor, sin cuentas, sin Internet y sin permisos de administrador.
 Descargue la última versión desde la página de
 [**Releases**](../../releases/latest):
 
-- **Windows**: descargue y ejecute `AulaAudio-1.0.0-Windows-instalador.exe` (no pide administrador).
+- **Windows**: descargue y ejecute `AulaAudio-1.1.0-Windows-instalador.exe` (no pide administrador).
   Si Windows SmartScreen avisa de «editor desconocido», pulse *Más información → Ejecutar de todas formas*.
 
 ## Inicio rápido
 
-- **Windows**: ejecute `AulaAudio-1.0.0-Windows-instalador.exe` (no pide administrador).
-- **Linux**: descomprima `AulaAudio-1.0.0-Linux-x86_64.tar.gz` y ejecute `./instalar.sh`.
+- **Windows**: ejecute `AulaAudio-1.1.0-Windows-instalador.exe` (no pide administrador).
+- **Linux**: descomprima `AulaAudio-1.1.0-Linux-x86_64.tar.gz` y ejecute `./instalar.sh`.
 - **Desde el código fuente** (Windows o Linux, Python 3.10 o superior; probado con 3.12):
 
 ```bash
@@ -51,7 +55,9 @@ python -m aulaaudio
 |---|---|
 | [docs/INSTALACION.md](docs/INSTALACION.md) | Instalación, ejecución en desarrollo y construcción de instaladores |
 | [docs/CONFIGURACION_INICIAL.md](docs/CONFIGURACION_INICIAL.md) | Conexión al equipo de sonido (minijack/RCA), primera prueba y primer horario |
-| [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md) | Uso diario de cada pestaña y reglas de reproducción |
+| [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md) | Uso diario de cada pestaña, reglas de reproducción y apagado programado |
+| [docs/VACACIONES.md](docs/VACACIONES.md) | Formato del archivo `vacaciones.json` (ejemplo: [vacaciones.example.json](vacaciones.example.json)) |
+| [CAMBIOS.md](CAMBIOS.md) | Novedades de cada versión |
 | [docs/MANUAL_MANTENIMIENTO.md](docs/MANUAL_MANTENIMIENTO.md) | Copias, restauración, actualización, desinstalación, registros y **recuperación ante fallos** |
 | [docs/LISTA_PUESTA_EN_MARCHA.md](docs/LISTA_PUESTA_EN_MARCHA.md) | Lista de comprobación para el centro |
 | [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) | Decisiones técnicas, módulos, seguridad y limitaciones |

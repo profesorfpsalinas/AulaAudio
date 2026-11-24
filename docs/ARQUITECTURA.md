@@ -33,12 +33,15 @@ aulaaudio/
   models.py       Dataclasses (Event, Track, Playlist, Schedule, CalendarException) y validación
   db.py           SQLite: esquema versionado, migraciones, CRUD con consultas parametrizadas
   scheduler.py    Qué suena cada día (excepciones, horarios alternativos, DST, medianoche)
+  power.py        Apagado programado: decisión por día (prioridades) y detección sin atrasos
+  vacaciones.py   vacaciones.json: lectura validada «todo o nada», escritura atómica con .bak,
+                  solapes y duplicado de periodos para el año siguiente
   engine.py       Motor: temporizador, conflictos, cola, reanudación, errores, acciones manuales
   audio.py        AudioBackend (interfaz), QtAudioBackend (real) y FakeAudioBackend (pruebas)
   library.py      Biblioteca: añadir, comprobar, relocalizar, M3U
   backup.py       Copias .zip validadas, restauración con copia previa automática
   simulation.py   Simulación con el motor real, reloj virtual y copia en memoria de la BD
-  system.py       Registro rotativo, inicio automático (HKCU / XDG), evitar suspensión
+  system.py       Registro rotativo, inicio automático (HKCU / XDG), evitar suspensión, apagar
   sounds.py       Sonido de prueba y sonidos de ejemplo sintetizados
   demo.py         Datos de demostración identificados y desactivados
   ui/             Una pestaña por archivo + diálogos + estilo
@@ -88,7 +91,9 @@ haya una reproducción a la vez (incluidas «Escuchar» y «Prueba de sonido»).
 - Sin red: no abre puertos, no hay servidor, no hay telemetría, no descarga nada. Las listas M3U
   ignoran direcciones `http://`.
 - No ejecuta comandos de shell. Las rutas del inicio automático salen de `sys.executable` y se
-  formatean con `subprocess.list2cmdline` (solo formatea) o con escape XDG.
+  formatean con `subprocess.list2cmdline` (solo formatea) o con escape XDG. La única orden externa
+  es la de apagado (`shutdown.exe /s /t 0` en Windows, `systemctl poweroff` en Linux), con
+  argumentos fijos, `shell=False` y solo tras una cuenta atrás que el usuario puede cancelar.
 - SQL siempre parametrizado (se prueba con nombres maliciosos). Búsquedas `LIKE` escapadas.
 - Validación de entradas en los modelos (longitudes, rangos, fechas) y de rutas (extensión de audio,
   archivo existente, sin seguir enlaces simbólicos al explorar carpetas, límite de 20 000 archivos).
@@ -110,8 +115,18 @@ haya una reproducción a la vez (incluidas «Escuchar» y «Prueba de sonido»).
 7. Un archivo suelto con fin por hora o duración se repite hasta el final; con «al terminar el
    audio» suena una vez.
 8. Los datos de ejemplo se crean desactivados para que nada suene sin revisión.
+9. (1.1) Los festivos y vacaciones se guardan en la base de datos (siguen tras reiniciar);
+   `vacaciones.json` sirve para importarlos y exportarlos. «desactivar_encendido» se acepta como
+   sinónimo de «desactivar_sonidos», porque AulaAudio no enciende el equipo.
+10. (1.1) El apagado programado está desactivado por defecto y se suspende en todos los festivos y
+    vacaciones salvo que el usuario indique lo contrario en cada periodo.
 
 ## 7. Limitaciones conocidas
+
+- AulaAudio no puede encender el equipo. El encendido automático depende de la BIOS/UEFI, que no
+  conoce las vacaciones: en esos días el equipo puede encenderse, pero no sonará nada.
+- El apagado necesita que el sistema permita apagar al usuario de la sesión (lo habitual en
+  equipos de sobremesa). Si una directiva lo impide, se avisa y queda anotado en el historial.
 
 - No suena con el equipo apagado, suspendido, hibernando, con la sesión cerrada o sin corriente.
   Recomendación: SAI, desactivar la suspensión, inicio automático y sesión iniciada.

@@ -22,7 +22,8 @@ from .. import backup
 from .common import AppContext, ask, error, guarded, help_label, info
 
 KIND_TEXT = {"manual": "Manual", "automatica": "Automática", "antes_de_restaurar": "Antes de restaurar",
-             "antes_de_actualizar": "Antes de actualizar", "dañada": "⚠ Dañada"}
+             "antes_de_actualizar": "Antes de actualizar", "antes_de_importar": "Antes de importar vacaciones",
+             "antes_de_duplicar": "Antes de duplicar periodos", "dañada": "⚠ Dañada"}
 
 
 class BackupTab(QWidget):

@@ -119,6 +119,10 @@ class HomeTab(QWidget):
         self.next_lbl.setObjectName("big")
         self.next_lbl.setWordWrap(True)
         l2.addWidget(self.next_lbl)
+        self.shutdown_lbl = QLabel()
+        self.shutdown_lbl.setObjectName("help")
+        self.shutdown_lbl.setWordWrap(True)
+        l2.addWidget(self.shutdown_lbl)
         lbl = QLabel("Sonando ahora")
         lbl.setObjectName("section")
         l2.addWidget(lbl)
@@ -226,6 +230,9 @@ class HomeTab(QWidget):
             wait = describe_wait(nxt.start_utc - self.ctx.clock.now())
             self.next_lbl.setText(f"<b>{fmt_hhmm(loc.time())}</b> ({day}) · {KINDS[nxt.event.kind]}: "
                                   f"{nxt.event.name} — {wait}")
+        text = eng.next_shutdown_text()
+        self.shutdown_lbl.setText(("⏻ " + text) if text else "")
+        self.shutdown_lbl.setVisible(bool(text))
 
     def _refresh_upcoming(self) -> None:
         eng = self.ctx.engine

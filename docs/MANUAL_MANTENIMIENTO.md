@@ -45,6 +45,11 @@ use *Localizar archivos movidos…*.
 Para volver a la versión anterior: reinstálela y restaure la copia «Antes de actualizar» (una base
 de datos de una versión más moderna no se abre en una anterior, para evitar dañarla).
 
+**De 1.0 a 1.1:** la base de datos se actualiza sola (añade a cada festivo/periodo las opciones
+«silenciar sonidos» y «no apagar», ambas activadas). Los festivos existentes siguen funcionando igual.
+Antes de un curso nuevo: exporte `vacaciones.json` como copia, use *Duplicar para el año siguiente*
+y revise las fechas móviles.
+
 ## 5. Desinstalación
 
 - **Windows**: *Configuración → Aplicaciones → AulaAudio → Desinstalar* (o *Desinstalar AulaAudio*

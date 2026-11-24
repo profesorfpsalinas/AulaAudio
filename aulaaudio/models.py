@@ -28,9 +28,9 @@ CONFLICTS = {
 
 EXC_HOLIDAY, EXC_VACATION, EXC_NONSCHOOL, EXC_ALT = "festivo", "vacaciones", "no_lectivo", "horario_alternativo"
 EXCEPTION_KINDS = {
-    EXC_HOLIDAY: "Festivo (sin sonido)",
-    EXC_VACATION: "Vacaciones (sin sonido)",
-    EXC_NONSCHOOL: "Día no lectivo (sin sonido)",
+    EXC_HOLIDAY: "Festivo",
+    EXC_VACATION: "Vacaciones",
+    EXC_NONSCHOOL: "Día no lectivo",
     EXC_ALT: "Cambio de horario (usar otro horario)",
 }
 SILENT_EXCEPTIONS = (EXC_HOLIDAY, EXC_VACATION, EXC_NONSCHOOL)
@@ -162,6 +162,14 @@ class CalendarException:
     date_to: date = field(default_factory=date.today)
     schedule_id: int | None = None
     notes: str = ""
+    # Qué se suspende esos días (lo decide el usuario en cada periodo):
+    suspend_sounds: bool = True  # no suena la programación semanal (solo festivo/vacaciones/no lectivo)
+    suspend_shutdown: bool = True  # no se apaga el equipo a la hora programada
+
+    @property
+    def silences(self) -> bool:
+        """True si ese periodo deja sin sonido la programación semanal."""
+        return self.kind in SILENT_EXCEPTIONS and self.suspend_sounds
 
     def validate(self) -> "CalendarException":
         self.name = (self.name or "").strip()
@@ -180,7 +188,53 @@ class CalendarException:
         if self.kind != EXC_ALT:
             self.schedule_id = None
         self.notes = (self.notes or "").strip()[:500]
+        self.suspend_sounds = bool(self.suspend_sounds) if self.kind in SILENT_EXCEPTIONS else False
+        self.suspend_shutdown = bool(self.suspend_shutdown)
         return self
 
     def covers(self, d: date) -> bool:
         return self.date_from <= d <= self.date_to
+
+    def overlaps(self, other: "CalendarException") -> bool:
+        return self.date_from <= other.date_to and other.date_from <= self.date_to
+
+    def same_as(self, other: "CalendarException") -> bool:
+        return (self.name.strip().lower(), self.kind, self.date_from, self.date_to) == \
+               (other.name.strip().lower(), other.kind, other.date_from, other.date_to)
+
+    def suspended_text(self) -> str:
+        parts = []
+        if self.silences:
+            parts.append("sonidos")
+        if self.suspend_shutdown:
+            parts.append("apagado")
+        return " y ".join(parts).capitalize() if parts else "Nada"
+
+
+def find_overlaps(items: list[CalendarException]) -> list[tuple[CalendarException, CalendarException]]:
+    """Pares de periodos que se solapan y conviene revisar.
+
+    Se avisa si se solapan dos periodos de varios días, o si un día suelto cae dentro de un
+    periodo que suspende otras cosas (entonces se aplica la opción más restrictiva). Un
+    festivo dentro de unas vacaciones que ya lo suspenden todo es normal y no se avisa.
+    Los cambios de horario no se comparan con los festivos.
+    """
+    pairs = []
+    ordered = sorted(items, key=lambda e: (e.date_from, e.date_to))
+    for i, a in enumerate(ordered):
+        for b in ordered[i + 1:]:
+            if b.date_from > a.date_to:
+                break
+            if (a.kind == EXC_ALT) != (b.kind == EXC_ALT) or not a.overlaps(b):
+                continue
+            multi = a.date_from != a.date_to and b.date_from != b.date_to
+            same_effect = (a.silences, a.suspend_shutdown) == (b.silences, b.suspend_shutdown)
+            if multi or not same_effect or a.kind == EXC_ALT:
+                pairs.append((a, b))
+    return pairs
+
+
+def describe_overlap(a: CalendarException, b: CalendarException) -> str:
+    f = "%d/%m/%Y"
+    return (f"«{a.name}» ({a.date_from.strftime(f)}–{a.date_to.strftime(f)}) y "
+            f"«{b.name}» ({b.date_from.strftime(f)}–{b.date_to.strftime(f)})")
